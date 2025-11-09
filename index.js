@@ -6,7 +6,7 @@ app.use(cors());
 app.use(express.json());
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = "mongodb+srv://jobs-db:KY2pkYjUsLig9EXN@nitech.towh5i4.mongodb.net/?appName=nitech";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -26,11 +26,23 @@ async function run() {
     const db = client.db("jobs-db")
     const allJobsCollection = db.collection("all-jobs")
 
-
+// To show all-jobs 
     app.get('/all-jobs',async(req,res)=>{
         const result = await allJobsCollection.find().toArray();
         res.send(result);
 
+    })
+
+    // Prticular data find er jonno 
+
+    app.get('/all-jobs/:id',async(req,res)=>{
+        const {id} = req.params
+        
+        const result = await allJobsCollection.findOne({_id: new ObjectId(id)})
+        res.send({
+            sucess : true,
+            result
+        })
     })
 
 

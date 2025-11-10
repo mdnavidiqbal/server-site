@@ -34,6 +34,10 @@ async function run() {
 
         })
 
+        ///
+
+        
+
         // Prticular data find er jonno 
 
         app.get('/all-jobs/:id', async (req, res) => {
@@ -52,6 +56,14 @@ async function run() {
             const data = req.body
             const result = await accpetedjobCollection.insertOne(data);
             res.send(result)
+        })
+
+        // get data 
+
+        app.get('/accepted',async(req,res)=>{
+            const result = await accpetedjobCollection.find().toArray();
+            res.send(result)
+
         })
 
 

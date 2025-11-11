@@ -1,15 +1,139 @@
-const express = require('express');
+// const express = require("express");
+// const cors = require("cors");
+// const app = express();
+// const port = 3000
+// app.use(cors());
+// app.use(express.json());
+
+
+// const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+// const uri = "mongodb+srv://jobs-db:KY2pkYjUsLig9EXN@nitech.towh5i4.mongodb.net/?appName=nitech";
+
+// // Create a MongoClient with a MongoClientOptions object to set the Stable API version
+// const client = new MongoClient(uri, {
+//     serverApi: {
+//         version: ServerApiVersion.v1,
+//         strict: true,
+//         deprecationErrors: true,
+//     }
+// });
+
+// async function run() {
+//     try {
+
+//         await client.connect();
+
+//         const db = client.db("jobs-db")
+//         const allJobsCollection = db.collection("all-jobs")
+//         const acceptedjobCollection = db.collection("accepted")
+
+//         // To show all-jobs 
+//         app.get('/all-jobs', async (req, res) => {
+//             const result = await allJobsCollection.find().toArray();
+//             res.send(result);
+
+//         })
+
+//         ///
+
+
+//         // Prticular data find er jonno 
+
+//         app.get('/all-jobs/:id', async (req, res) => {
+//             const { id } = req.params
+
+//             const result = await allJobsCollection.findOne({ _id: new ObjectId(id) })
+//             res.send({
+//                 sucess: true,
+//                 result
+//             })
+//         })
+
+//         // Insert data 
+
+//         // app.post('/accepted', async (req, res) => {
+//         //     const data = req.body
+//         //     const result = await accpetedjobCollection.insertOne(data);
+//         //     res.send(result)
+//         // })
+
+//         app.post('/accepted', async (req, res) => {
+//             try {
+//                 const data = req.body
+//                 const existing = await acceptedjobCollection.findOne({ _id: data._id })
+//                 if (existing) {
+//                     return res.status(409).send({
+//                         success: false,
+//                         message: 'This job is already accepted!'
+//                     })
+//                 }
+//                 const result = await acceptedjobCollection.insertOne(data)
+//                 res.send({
+//                     success: true,
+//                     message: 'Job accepted successfully!',
+//                     result
+//                 })
+//             } catch (error) {
+//                 console.error('Error inserting job:', error)
+//                 res.status(500).send({
+//                     success: false,
+//                     message: 'Internal server error'
+//                 })
+//             }
+//         })
+
+//         // Particular data delete er jonno 
+
+//         app.delete('/accepted/:id',async(req,res)=>{
+//             const {id} = req.params
+//             const result = await acceptedjobCollection.deleteOne({_id : new ObjectId(id)})
+//             res.send({
+//                 success: true,
+//                 result
+//             })
+//         })
+
+//         // get data 
+
+//         app.get('/accepted', async (req, res) => {
+//             const result = await acceptedjobCollection.find().toArray();
+//             res.send(result)
+
+//         })
+
+
+
+//         // Send a ping to confirm a successful connection
+//         await client.db("admin").command({ ping: 1 });
+//         console.log("Pinged your deployment. You successfully connected to MongoDB!");
+//     } finally {
+
+//     }
+// }
+// run().catch(console.dir);
+
+
+
+// app.get('/', (req, res) => {
+//     res.send('Hello I am From Server Site &&&....')
+// })
+
+// app.listen(port, () => {
+//     console.log(`Example app listening on port ${port}`)
+// })
+
+
+const express = require("express");
 const cors = require("cors");
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+
 const app = express();
-const port = 3000
+const port = 3000;
+
 app.use(cors());
 app.use(express.json());
 
-
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = "mongodb+srv://jobs-db:KY2pkYjUsLig9EXN@nitech.towh5i4.mongodb.net/?appName=nitech";
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
@@ -20,70 +144,102 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-
         await client.connect();
+        const db = client.db("jobs-db");
+        const allJobsCollection = db.collection("all-jobs");
+        const acceptedjobCollection = db.collection("accepted");
 
-        const db = client.db("jobs-db")
-        const allJobsCollection = db.collection("all-jobs")
-        const accpetedjobCollection = db.collection("accepted")
-
-        // To show all-jobs 
+        // ✅ Get all jobs
         app.get('/all-jobs', async (req, res) => {
             const result = await allJobsCollection.find().toArray();
             res.send(result);
+        });
 
-        })
-
-        ///
-
-        
-
-        // Prticular data find er jonno 
-
+        // ✅ Get single job
         app.get('/all-jobs/:id', async (req, res) => {
-            const { id } = req.params
+            const { id } = req.params;
+            const result = await allJobsCollection.findOne({ _id: new ObjectId(id) });
+            res.send({ success: true, result });
+        });
 
-            const result = await allJobsCollection.findOne({ _id: new ObjectId(id) })
-            res.send({
-                sucess: true,
-                result
-            })
-        })
-
-        // Insert data 
-
+        // ✅ Insert accepted job (Fixed with ObjectId)
         app.post('/accepted', async (req, res) => {
-            const data = req.body
-            const result = await accpetedjobCollection.insertOne(data);
-            res.send(result)
-        })
+            try {
+                const data = req.body;
+                const jobId = new ObjectId(data._id);
 
-        // get data 
+                const existing = await acceptedjobCollection.findOne({ _id: jobId });
+                if (existing) {
+                    return res.status(409).send({
+                        success: false,
+                        message: 'This job is already accepted!'
+                    });
+                }
 
-        app.get('/accepted',async(req,res)=>{
-            const result = await accpetedjobCollection.find().toArray();
-            res.send(result)
+                const result = await acceptedjobCollection.insertOne({
+                    ...data,
+                    _id: jobId
+                });
 
-        })
+                res.send({
+                    success: true,
+                    message: 'Job accepted successfully!',
+                    result
+                });
+            } catch (error) {
+                console.error('Error inserting job:', error);
+                res.status(500).send({
+                    success: false,
+                    message: 'Internal server error'
+                });
+            }
+        });
 
+        // ✅ Delete accepted job (Fixed response)
+        app.delete('/accepted/:id', async (req, res) => {
+            const { id } = req.params;
+            try {
+                const result = await acceptedjobCollection.deleteOne({ _id: new ObjectId(id) });
 
+                if (result.deletedCount === 1) {
+                    res.send({
+                        success: true,
+                        message: "Deleted successfully!"
+                    });
+                } else {
+                    res.status(404).send({
+                        success: false,
+                        message: "Job not found!"
+                    });
+                }
+            } catch (err) {
+                console.error("❌ Error deleting:", err);
+                res.status(500).send({
+                    success: false,
+                    message: "Delete failed!"
+                });
+            }
+        });
 
+        // ✅ Get all accepted jobs
+        app.get('/accepted', async (req, res) => {
+            const result = await acceptedjobCollection.find().toArray();
+            res.send(result);
+        });
 
-        // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        console.log("✅ Connected to MongoDB!");
     } finally {
-
+        // keep server running
     }
 }
 run().catch(console.dir);
 
-
-
 app.get('/', (req, res) => {
-    res.send('Hello I am From Server Site &&&....')
-})
+    res.send('✅ Server is running fine.');
+});
 
 app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
-})
+    console.log(`🚀 Server running on port ${port}`);
+});
+

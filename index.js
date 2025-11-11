@@ -25,20 +25,20 @@ async function run() {
         const allJobsCollection = db.collection("all-jobs");
         const acceptedjobCollection = db.collection("accepted");
 
-        // ✅ Get all jobs
+        //  Get all jobs
         app.get('/all-jobs', async (req, res) => {
             const result = await allJobsCollection.find().toArray();
             res.send(result);
         });
 
-        // ✅ Get single job
+        // Get single job
         app.get('/all-jobs/:id', async (req, res) => {
             const { id } = req.params;
             const result = await allJobsCollection.findOne({ _id: new ObjectId(id) });
             res.send({ success: true, result });
         });
 
-        //✅ Insert accepted job (Fixed with ObjectId)
+        // Insert accepted job (Fixed with ObjectId)
         app.post('/accepted', async (req, res) => {
             try {
                 const data = req.body;
@@ -71,7 +71,7 @@ async function run() {
             }
         });
 
-        // ✅ Delete accepted job (Fixed response)
+        // Delete accepted job (Fixed response)
         app.delete('/accepted/:id', async (req, res) => {
             const { id } = req.params;
             try {
@@ -97,14 +97,14 @@ async function run() {
             }
         });
 
-        // ✅ Get all accepted jobs
+        //  Get all accepted jobs
         app.get('/accepted', async (req, res) => {
             const result = await acceptedjobCollection.find().toArray();
             res.send(result);
         });
 
         await client.db("admin").command({ ping: 1 });
-        console.log("✅ Connected to MongoDB!");
+        console.log("Connected to MongoDB!");
     } finally {
         // keep server running
     }
@@ -112,10 +112,10 @@ async function run() {
 run().catch(console.dir);
 
 app.get('/', (req, res) => {
-    res.send('✅ Server is running fine.');
+    res.send('Server is running fine.');
 });
 
 app.listen(port, () => {
-    console.log(`🚀 Server running on port ${port}`);
+    console.log(`Server running on port ${port}`);
 });
 

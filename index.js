@@ -1,4 +1,3 @@
-
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -26,10 +25,20 @@ async function run() {
         const acceptedjobCollection = db.collection("accepted");
         const addJobsCollection = db.collection("addjobs");
 
-        //  Get all jobs
+        // GET all jobs with optional date sorting
         app.get('/all-jobs', async (req, res) => {
-            const result = await allJobsCollection.find().toArray();
-            res.send(result);
+            try {
+                const { sort } = req.query; // asc / desc
+                const sortOption = {};
+                if (sort === "asc") sortOption.postedAt = 1;
+                else if (sort === "desc") sortOption.postedAt = -1;
+
+                const result = await allJobsCollection.find().sort(sortOption).toArray();
+                res.send(result);
+            } catch (err) {
+                console.error("Error fetching jobs:", err);
+                res.status(500).send({ success: false, message: "Server error" });
+            }
         });
 
         // Get single job
@@ -39,68 +48,68 @@ async function run() {
             res.send({ success: true, result });
         });
 
+        // POST a job in addjobs collection
+        app.post('/addjobs', async (req, res) => {
+            try {
+                const data = req.body;
+                if (!data.postedAt) data.postedAt = new Date();
+                else data.postedAt = new Date(data.postedAt);
 
-        //post a job in addjobs collection 
-        app.post('/addjobs',async(req,res)=>{
-            const data = req.body;
-            const result = await addJobsCollection.insertOne(data);
-            res.send({
-                success:true,
-                result
-            })
-        })
+                const result = await addJobsCollection.insertOne(data);
+                res.send({ success: true, result });
+            } catch (err) {
+                console.error("Error adding job:", err);
+                res.status(500).send({ success: false, message: "Insert failed" });
+            }
+        });
 
-        // get posted data from addjobs collection
-
-        app.get('/addjobs',async(req,res)=>{
-            const result = await addJobsCollection.find().toArray();
-            res.send(result);
-        })
-
-        // all jobs
+        // GET all posted jobs
         app.get('/addjobs', async (req, res) => {
             const result = await addJobsCollection.find().toArray();
             res.send(result);
         });
 
-        // get single job
+        // GET single job from addjobs
         app.get('/addjobs/:id', async (req, res) => {
             const id = req.params.id;
             const result = await addJobsCollection.findOne({ _id: new ObjectId(id) });
             res.send(result);
         });
 
-        // update job
+        // UPDATE job
         app.put('/addjobs/:id', async (req, res) => {
-            const id = req.params.id;
-            const updatedJob = req.body;
-            const filter = { _id: new ObjectId(id) };
-            const updateDoc = { $set: updatedJob };
-            const result = await addJobsCollection.updateOne(filter, updateDoc);
-            res.send(result);
+            try {
+                const id = req.params.id;
+                const updatedJob = req.body;
+                if (updatedJob.postedAt) updatedJob.postedAt = new Date(updatedJob.postedAt);
+
+                const filter = { _id: new ObjectId(id) };
+                const updateDoc = { $set: updatedJob };
+                const result = await addJobsCollection.updateOne(filter, updateDoc);
+                res.send({ success: true, result });
+            } catch (err) {
+                console.error("Error updating job:", err);
+                res.status(500).send({ success: false, message: "Update failed" });
+            }
         });
 
-
-        // Delete addjobs data  
+        // DELETE job
         app.delete('/addjobs/:id', async (req, res) => {
             const { id } = req.params;
-
             try {
                 const result = await addJobsCollection.deleteOne({ _id: new ObjectId(id) });
-
                 if (result.deletedCount === 1) {
                     res.send({ success: true, message: 'Job deleted successfully' });
                 } else {
                     res.status(404).send({ success: false, message: 'Job not found' });
                 }
             } catch (err) {
+                console.error(err);
                 res.status(500).send({ success: false, message: err.message });
             }
         });
 
-
-
-        // Insert accepted job (Fixed with ObjectId)
+        // INSERT accepted job
         app.post('/accepted', async (req, res) => {
             try {
                 const data = req.body;
@@ -114,52 +123,31 @@ async function run() {
                     });
                 }
 
-                const result = await acceptedjobCollection.insertOne({
-                    ...data,
-                    _id: jobId
-                });
-
-                res.send({
-                    success: true,
-                    message: 'Job accepted successfully!',
-                    result
-                });
+                const result = await acceptedjobCollection.insertOne({ ...data, _id: jobId });
+                res.send({ success: true, message: 'Job accepted successfully!', result });
             } catch (error) {
                 console.error('Error inserting job:', error);
-                res.status(500).send({
-                    success: false,
-                    message: 'Internal server error'
-                });
+                res.status(500).send({ success: false, message: 'Internal server error' });
             }
         });
 
-        // Delete accepted job (Fixed response)
+        // DELETE accepted job
         app.delete('/accepted/:id', async (req, res) => {
             const { id } = req.params;
             try {
                 const result = await acceptedjobCollection.deleteOne({ _id: new ObjectId(id) });
-
                 if (result.deletedCount === 1) {
-                    res.send({
-                        success: true,
-                        message: "Deleted successfully!"
-                    });
+                    res.send({ success: true, message: "Deleted successfully!" });
                 } else {
-                    res.status(404).send({
-                        success: false,
-                        message: "Job not found!"
-                    });
+                    res.status(404).send({ success: false, message: "Job not found!" });
                 }
             } catch (err) {
-                console.error("❌ Error deleting:", err);
-                res.status(500).send({
-                    success: false,
-                    message: "Delete failed!"
-                });
+                console.error("Error deleting:", err);
+                res.status(500).send({ success: false, message: "Delete failed!" });
             }
         });
 
-        //  Get all accepted jobs
+        // GET all accepted jobs
         app.get('/accepted', async (req, res) => {
             const result = await acceptedjobCollection.find().toArray();
             res.send(result);
@@ -168,7 +156,7 @@ async function run() {
         await client.db("admin").command({ ping: 1 });
         console.log("Connected to MongoDB!");
     } finally {
-        // keep server running
+        // server keeps running
     }
 }
 run().catch(console.dir);
@@ -180,4 +168,3 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
-

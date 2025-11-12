@@ -41,14 +41,49 @@ async function run() {
 
 
         // post a job in addjobs collection 
-        app.post('/addjobs',async(req,res)=>{
-            const data = req.body;
-            const result = await addJobsCollection.insertOne(data);
-            res.send({
-                success:true,
-                result
-            })
-        })
+        // app.post('/addjobs',async(req,res)=>{
+        //     const data = req.body;
+        //     const result = await addJobsCollection.insertOne(data);
+        //     res.send({
+        //         success:true,
+        //         result
+        //     })
+        // })
+
+        // // get posted data from addjobs collection
+
+        // app.get('/addjobs',async(req,res)=>{
+        //     const result = await addJobsCollection.find().toArray();
+        //     res.send(result);
+        // })
+
+        // all jobs
+        app.get('/addjobs', async (req, res) => {
+            const result = await addJobsCollection.find().toArray();
+            res.send(result);
+        });
+
+        // get single job
+        app.get('/addjobs/:id', async (req, res) => {
+            const id = req.params.id;
+            const result = await addJobsCollection.findOne({ _id: new ObjectId(id) });
+            res.send(result);
+        });
+
+        // update job
+        app.put('/addjobs/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedJob = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = { $set: updatedJob };
+            const result = await addJobsCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        });
+
+
+        // Update Posted data 
+
+
 
         // Insert accepted job (Fixed with ObjectId)
         app.post('/accepted', async (req, res) => {

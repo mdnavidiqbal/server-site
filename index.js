@@ -24,6 +24,7 @@ async function run() {
         const db = client.db("jobs-db");
         const allJobsCollection = db.collection("all-jobs");
         const acceptedjobCollection = db.collection("accepted");
+        const addJobsCollection = db.collection("addjobs");
 
         //  Get all jobs
         app.get('/all-jobs', async (req, res) => {
@@ -37,6 +38,17 @@ async function run() {
             const result = await allJobsCollection.findOne({ _id: new ObjectId(id) });
             res.send({ success: true, result });
         });
+
+
+        // post a job in addjobs collection 
+        app.post('/addjobs',async(req,res)=>{
+            const data = req.body;
+            const result = await addJobsCollection.insertOne(data);
+            res.send({
+                success:true,
+                result
+            })
+        })
 
         // Insert accepted job (Fixed with ObjectId)
         app.post('/accepted', async (req, res) => {

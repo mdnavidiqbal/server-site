@@ -40,22 +40,22 @@ async function run() {
         });
 
 
-        // post a job in addjobs collection 
-        // app.post('/addjobs',async(req,res)=>{
-        //     const data = req.body;
-        //     const result = await addJobsCollection.insertOne(data);
-        //     res.send({
-        //         success:true,
-        //         result
-        //     })
-        // })
+        //post a job in addjobs collection 
+        app.post('/addjobs',async(req,res)=>{
+            const data = req.body;
+            const result = await addJobsCollection.insertOne(data);
+            res.send({
+                success:true,
+                result
+            })
+        })
 
-        // // get posted data from addjobs collection
+        // get posted data from addjobs collection
 
-        // app.get('/addjobs',async(req,res)=>{
-        //     const result = await addJobsCollection.find().toArray();
-        //     res.send(result);
-        // })
+        app.get('/addjobs',async(req,res)=>{
+            const result = await addJobsCollection.find().toArray();
+            res.send(result);
+        })
 
         // all jobs
         app.get('/addjobs', async (req, res) => {
@@ -81,7 +81,22 @@ async function run() {
         });
 
 
-        // Update Posted data 
+        // Delete addjobs data  
+        app.delete('/addjobs/:id', async (req, res) => {
+            const { id } = req.params;
+
+            try {
+                const result = await addJobsCollection.deleteOne({ _id: new ObjectId(id) });
+
+                if (result.deletedCount === 1) {
+                    res.send({ success: true, message: 'Job deleted successfully' });
+                } else {
+                    res.status(404).send({ success: false, message: 'Job not found' });
+                }
+            } catch (err) {
+                res.status(500).send({ success: false, message: err.message });
+            }
+        });
 
 
 
